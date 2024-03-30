@@ -1,13 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+
+//allows better handling of the formating options
+typedef struct formating{
+
+    int width;
+    bool align_right;
+    bool align_left;
+    bool fillZeros;
+    bool line_startZero;
+
+}formating;
 
 void printHelp();
 void printVersion();
-
-struct format{
-    
-}
+formating formatHandling(const char*);
 
 int main(int argc, char* argv[]){
 
@@ -51,10 +60,11 @@ int main(int argc, char* argv[]){
             printVersion();
         }
         else if(strcmp(argv[i],"-n")==0){
-            //wip format handling
+            formatHandling(argv[i]);
         }
     }
 
+    //closing file if file is not stdin
     if(strcmp(argv[argc-1],"-")!=0){
         fclose(file);
     }
@@ -84,4 +94,12 @@ void printHelp(){
 void printVersion(){
 
     printf("cvb version: 1.0, 30.03.2024");
+}
+
+formating formatHandling(const char* argv){
+
+    formating options = {3,true,false,false,false}; //default options 
+
+
+
 }

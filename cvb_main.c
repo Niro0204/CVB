@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #define MAX_LINE_LENGTH 1000
 
@@ -51,37 +52,31 @@ int main(int argc, char* argv[]){
         }
     }
 
-    printf("beginning with arguments\n");
+   char testString[5]="04";
     //process other arguments
     for(int i = 0;i<argc;i++){
         
        
         if(strcmp(argv[i],"-s")==0 && i+1 < argc){
             startLine = atoi(argv[++i]);
-            i++;
         }
         else if(strcmp(argv[i],"-e")==0 && i+1 < argc){
             endLine = atoi(argv[++i]);
-            i++;
         }
-        else if(strcmp(argv[i],"-v")){
+        else if(strcmp(argv[i],"-v")==0){
             //coming soon 
         }
         else if(strcmp(argv[i],"-q")==0){
             //coming soon
         }
         else if(strcmp(argv[i],"-n")==0 && i+1 < argc){
-            format=formatHandling(argv[++i]);
+           format=formatHandling(argv[++i]);
         }
     }
 
-    printf("finished arguments\n");
-
-   
     printLines(file,startLine,endLine,format);
 
-    printf("why are there no lines?\n");
-
+    
     //closing file if file is not stdin
     if(strcmp(argv[argc-1],"-")!=0){
         fclose(file);
@@ -116,21 +111,20 @@ void printVersion(){
 
 formating formatHandling(const char* format){
 
-    formating options = {3,true,false,false,false}; //default options 
-
+   formating options = {3,true,false,false,false}; //default options 
+    
     if(format != NULL){
 
         for(int i =0; format[i] != '\0';i++){
             switch (format[i]){
                 case 'R':
                     options.align_right = true;
-                    options.align_left = false;
                     break;
                 case 'L':
                     options.align_right = false;
                     options.align_left = true;
                     break;
-                case 'O':
+                case '0':
                     options.fillZeros = true;
                     break;
                 case 'N':
@@ -145,65 +139,20 @@ formating formatHandling(const char* format){
         }
     }
 
-    printf("formats got handeled!\n");
 
     return options;
 }
 
-
-
-/*void printLines(FILE* file,int startLine,int endLine,formating options){
-
-    char line[MAX_LINE_LENGTH];
-    int lineCount = options.line_startZero ? 0 : 1;
-
-    while(fgets(line,MAX_LINE_LENGTH,file)!=NULL){
-
-        if(feof(file)){
-            break;
-        }
-
-        if(lineCount>=startLine && lineCount<=endLine){
-
-            line[strcspn(line, "\n")] = '\0';
-
-            if(options.align_right){
-                fprintf(stdout,"%*d: %s",options.width,lineCount,line);
-            }
-            else if(options.align_left){
-                fprintf(stdout,"%-*d: %s",options.width, lineCount, line);
-            }
-            else if(options.fillZeros){
-                fprintf(stdout,"%0*d: %s",options.width, lineCount, line);
-            }
-            else{
-                fprintf(stdout,"%d: %s",lineCount, line);
-            }
-
-
-        }
-
-        if(lineCount==endLine){
-            break;
-        }
-
-        lineCount++;
-    }
-
-
-
-}*/
-
 void printLines(FILE* file, int startLine, int endLine, formating options) {
 
-    printf("now you should print lines\n");
+  
     char line[MAX_LINE_LENGTH];
     int lineCount = options.line_startZero ? 0 : 1;
     int printedLines = 0; 
 
     while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
         
-        line[strcspn(line, "\n")] = '\0';
+        line[strcspn(line, "\n")] = '\0'; //switches next line witch end string symbol
 
         if (lineCount >= startLine && lineCount <= endLine) {
             char line_number_str[10]; 

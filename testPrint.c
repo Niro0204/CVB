@@ -101,9 +101,52 @@ int main(){
             fprintf(stderr,"failed to open file!");
             exit(1);
         }
-    char testString[5]="4O";
+    char testString[5]="2O";
     formating format = formatHandling(testString);
     printLines(file,1,5,format);
 
     return 0;
 }
+
+/*void printLines(FILE* file,int startLine,int endLine,formating options){
+
+    char line[MAX_LINE_LENGTH];
+    int lineCount = options.line_startZero ? 0 : 1;
+
+    while(fgets(line,MAX_LINE_LENGTH,file)!=NULL){
+
+        if(feof(file)){
+            break;
+        }
+
+        if(lineCount>=startLine && lineCount<=endLine){
+
+            line[strcspn(line, "\n")] = '\0';
+
+            if(options.align_right){
+                fprintf(stdout,"%*d: %s",options.width,lineCount,line);
+            }
+            else if(options.align_left){
+                fprintf(stdout,"%-*d: %s",options.width, lineCount, line);
+            }
+            else if(options.fillZeros){
+                fprintf(stdout,"%0*d: %s",options.width, lineCount, line);
+            }
+            else{
+                fprintf(stdout,"%d: %s",lineCount, line);
+            }
+
+
+        }
+
+        if(lineCount==endLine){
+            break;
+        }
+
+        lineCount++;
+    }
+
+
+
+}*/
+

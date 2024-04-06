@@ -25,9 +25,19 @@ int main(int argc, char* argv[]){
 
     int startLine = 0;
     int endLine = 0;
-    formating format;
+    formating format={3,true,false,false,false}; //default format
 
     FILE* file = NULL;
+
+    if(strcmp(argv[argc-1],"--help")==0){
+        printHelp();
+        exit(1);
+    }
+
+    else if(strcmp(argv[argc-1],"--version")==0){
+        printVersion();
+        exit(1);
+    }
 
     //when the last argument is "-", the input is set to stdin
     if(strcmp(argv[argc-1],"-")==0){
@@ -41,18 +51,17 @@ int main(int argc, char* argv[]){
         }
     }
 
+    printf("beginning with arguments\n");
     //process other arguments
     for(int i = 0;i<argc;i++){
         
-        if(strcmp(argv[i],"--help")==0){
-            printHelp();
-        }
-        else if(strcmp(argv[i],"-s")==0 && i+1 < argc){
-            startLine = atoi(argv[i+1]);
+       
+        if(strcmp(argv[i],"-s")==0 && i+1 < argc){
+            startLine = atoi(argv[++i]);
             i++;
         }
         else if(strcmp(argv[i],"-e")==0 && i+1 < argc){
-            endLine = atoi(argv[i+1]);
+            endLine = atoi(argv[++i]);
             i++;
         }
         else if(strcmp(argv[i],"-v")){
@@ -61,15 +70,17 @@ int main(int argc, char* argv[]){
         else if(strcmp(argv[i],"-q")==0){
             //coming soon
         }
-        else if(strcmp(argv[i],"--version")==0){
-            printVersion();
-        }
         else if(strcmp(argv[i],"-n")==0 && i+1 < argc){
-            format=formatHandling(argv[i+1]);
+            format=formatHandling(argv[++i]);
         }
     }
 
+    printf("finished arguments\n");
+
+   
     printLines(file,startLine,endLine,format);
+
+    printf("why are there no lines?\n");
 
     //closing file if file is not stdin
     if(strcmp(argv[argc-1],"-")!=0){
@@ -81,7 +92,7 @@ int main(int argc, char* argv[]){
 
 void printHelp(){
 
-    printf("Help information:\n"
+    fprintf(stdout,"Help information:\n"
            "--help - Help information is output; program terminates\n"
            "-s n - Specify the first (nth) line to be output\n"
            "-e n - Specify the last (mth) line to be output\n"
@@ -109,7 +120,7 @@ formating formatHandling(const char* format){
 
     if(format != NULL){
 
-        for(int i =0; format[i] != '/0';i++){
+        for(int i =0; format[i] != '\0';i++){
             switch (format[i]){
                 case 'R':
                     options.align_right = true;
@@ -133,6 +144,8 @@ formating formatHandling(const char* format){
             }
         }
     }
+
+    printf("formats got handeled!\n");
 
     return options;
 }
@@ -182,35 +195,37 @@ formating formatHandling(const char* format){
 }*/
 
 void printLines(FILE* file, int startLine, int endLine, formating options) {
+
+    printf("now you should print lines\n");
     char line[MAX_LINE_LENGTH];
     int lineCount = options.line_startZero ? 0 : 1;
-    int printedLines = 0; // Anzahl der gedruckten Zeilen
+    int printedLines = 0; 
 
     while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
-        // Entferne das Zeilenende von 'line'
+        
         line[strcspn(line, "\n")] = '\0';
 
         if (lineCount >= startLine && lineCount <= endLine) {
-            char line_number_str[10]; // Buffer für die formatierte Zeilennummer
+            char line_number_str[10]; 
 
-            // Formatieren der Zeilennummer
+          
             if (options.fillZeros) {
                 snprintf(line_number_str, sizeof(line_number_str), "%0*d", options.width, lineCount);
             } else {
                 snprintf(line_number_str, sizeof(line_number_str), "%*d", options.width, lineCount);
             }
 
-            // Ausgabe der Zeile mit der formatierten Zeilennummer
+         
             if (options.align_right) {
                 fprintf(stdout, "%*s: %s\n", options.width, line_number_str, line);
             } else {
                 fprintf(stdout, "%s: %*s\n", line_number_str, options.width, line);
             }
 
-            printedLines++; // Erhöhe die Anzahl der gedruckten Zeilen
+            printedLines++; 
         }
 
-        // Überprüfen, ob die letzte Zeile erreicht ist oder ob die maximale Anzahl von Zeilen gedruckt wurde
+       
         if (lineCount == endLine || printedLines == endLine - startLine + 1) {
             break;
         }

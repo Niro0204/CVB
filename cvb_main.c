@@ -151,13 +151,13 @@ void printLines(FILE* file, int startLine, int endLine, formating options) {
     int printedLines = 0; 
     int totalLines = 0;
 
-  
+    printf("%d",endLine);
 
-    if(endLine==0){
-
-        while(fgets(line,MAX_LINE_LENGTH,file) != NULL){
+     while(fgets(line,MAX_LINE_LENGTH,file) != NULL){
             totalLines++;
         }
+
+    if(endLine==0){
         
         endLine=totalLines;
     }

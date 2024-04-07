@@ -151,6 +151,22 @@ void printLines(FILE* file, int startLine, int endLine, formating options) {
     char line[MAX_LINE_LENGTH];
     int lineCount = options.line_startZero ? 0 : 1;
     int printedLines = 0; 
+    int totalLines = 0;
+
+    printf("%d",endLine);
+
+    while(fgets(line,MAX_LINE_LENGTH,file) != NULL){
+            totalLines++;
+        }
+
+    if(endLine==0){
+        
+        endLine = totalLines;
+    }
+
+    fseek(file, 0, SEEK_SET);
+
+    printf("%d",endLine);
 
     while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
         

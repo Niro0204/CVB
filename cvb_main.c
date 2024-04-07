@@ -52,7 +52,6 @@ int main(int argc, char* argv[]){
         }
     }
 
-   char testString[5]="04";
     //process other arguments
     for(int i = 0;i<argc;i++){
         
@@ -72,7 +71,10 @@ int main(int argc, char* argv[]){
         else if(strcmp(argv[i],"-n")==0 && i+1 < argc){
            format=formatHandling(argv[++i]);
         }
+        
     }
+
+    printf("start: %d, end: %d",startLine,endLine);
 
     printLines(file,startLine,endLine,format);
 

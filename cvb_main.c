@@ -52,7 +52,7 @@ int main(int argc, char* argv[]){
         }
     }
 
-   char testString[5]="04";
+
     //process other arguments
     for(int i = 0;i<argc;i++){
         
@@ -149,9 +149,23 @@ void printLines(FILE* file, int startLine, int endLine, formating options) {
     char line[MAX_LINE_LENGTH];
     int lineCount = options.line_startZero ? 0 : 1;
     int printedLines = 0; 
+    int totalLines = 0;
+
+  
+
+    if(endLine==0){
+
+        while(fgets(line,MAX_LINE_LENGTH,file) != NULL){
+            totalLines++;
+        }
+        
+        endLine=totalLines;
+    }
+    
 
     while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
-        
+
+
         line[strcspn(line, "\n")] = '\0'; //switches next line witch end string symbol
 
         if (lineCount >= startLine && lineCount <= endLine) {

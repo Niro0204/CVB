@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
+#include <sys/stat.h>
+#include <time.h>
 
 typedef struct formating{
 
@@ -96,7 +99,7 @@ int main(){
 
     FILE* file = NULL;
 
-        file = fopen("test.txt","r");
+        file = stdin;
         if(file == NULL){
             fprintf(stderr,"failed to open file!");
             exit(1);

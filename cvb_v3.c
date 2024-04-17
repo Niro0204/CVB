@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <sys/stat.h>
+#include <time.h>
 
 #define MAX_LINE_LENGTH 1000
 
@@ -20,12 +22,15 @@ typedef struct formating{
 void printHelp();
 void printVersion();
 formating formatHandling(const char*);
-void printLines(FILE*,int,int,formating);
+void printLines(FILE*,int,int,formating,bool);
+int totalLines(FILE*);
 
 int main(int argc, char* argv[]){
 
     int startLine = 0;
     int endLine = 0;
+    bool verbose_mode = false;
+    bool quiet_mode = false;
     formating format={3,true,false,false,false}; //default format
 
     FILE* file = NULL;
@@ -43,6 +48,7 @@ int main(int argc, char* argv[]){
     //when the last argument is "-", the input is set to stdin
     if(strcmp(argv[argc-1],"-")==0){
         file = stdin;
+        printf("input is stdin");
     }
     else{
         file = fopen(argv[argc-1],"r");
@@ -52,7 +58,7 @@ int main(int argc, char* argv[]){
         }
     }
 
-
+    
     //process other arguments
     for(int i = 0;i<argc;i++){
         
@@ -64,19 +70,54 @@ int main(int argc, char* argv[]){
             endLine = atoi(argv[++i]);
         }
         else if(strcmp(argv[i],"-v")==0){
-            //coming soon 
+            verbose_mode = true;
         }
         else if(strcmp(argv[i],"-q")==0){
-            //coming soon
+            quiet_mode = true;
         }
         else if(strcmp(argv[i],"-n")==0 && i+1 < argc){
            format=formatHandling(argv[++i]);
         }
     }
 
-    printLines(file,startLine,endLine,format);
+    if (quiet_mode && verbose_mode) {
+        fprintf(stderr, "Cannot use both -q and -v options at the same time.\n");
+        exit(1);
+    }
 
-    
+    if (!quiet_mode && verbose_mode) {
+        fprintf(stdout,"Verbose mode is enabled.\n");
+    }
+
+
+    if (!quiet_mode) {
+
+        if (verbose_mode || quiet_mode) {
+            struct stat filestat;
+            stat(argv[argc - 1], &filestat);
+            printf("File access time %s", ctime(&filestat.st_atime));
+            printf("File modify time %s", ctime(&filestat.st_mtime));
+            printf("File changed time %s", ctime(&filestat.st_ctime));
+        }
+
+        printLines(file, startLine, endLine, format, verbose_mode);
+
+    } else {
+        fprintf(stdout,"Quiet mode is enabled.\n");
+
+           if (verbose_mode || quiet_mode) {
+                struct stat filestat;
+                stat(argv[argc - 1], &filestat);
+                printf("File access time %s", ctime(&filestat.st_atime));
+                printf("File modify time %s", ctime(&filestat.st_mtime));
+                printf("File changed time %s", ctime(&filestat.st_ctime));
+            }
+
+        fprintf(stdout,"Total lines: %d\n", totalLines(file));
+    }
+
+  
+
     //closing file if file is not stdin
     if(strcmp(argv[argc-1],"-")!=0){
         fclose(file);
@@ -143,26 +184,27 @@ formating formatHandling(const char* format){
     return options;
 }
 
-void printLines(FILE* file, int startLine, int endLine, formating options) {
+void printLines(FILE* file, int startLine, int endLine, formating options, bool verbose_mode) {
+
+
 
   
     char line[MAX_LINE_LENGTH];
     int lineCount = options.line_startZero ? 0 : 1;
     int printedLines = 0; 
-    int totalLines = 0;
-
-
-     while(fgets(line,MAX_LINE_LENGTH,file) != NULL){
-            totalLines++;
-        }
+    int total_Lines = totalLines(file);
+    
 
     if(endLine==0){
 
-        endLine=totalLines;
+        endLine=total_Lines;
     }
 
-    fseek(file, 0, SEEK_SET);
-    
+    if(verbose_mode == true){
+        fprintf(stdout,"total lines: %d\n", total_Lines);
+    }
+
+   
 
     while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
 
@@ -196,4 +238,23 @@ void printLines(FILE* file, int startLine, int endLine, formating options) {
 
         lineCount++;
     }
+}
+
+int totalLines(FILE* file){
+
+    fseek(file, 0, SEEK_SET);
+
+    char tempLines[MAX_LINE_LENGTH];
+    int totalLines = 0;
+
+    while(fgets(tempLines,MAX_LINE_LENGTH,file) != NULL){
+        totalLines++;
+    }
+    fseek(file, 0, SEEK_SET);
+
+    if(totalLines == 0){
+        fprintf(stderr, "no lines in given file\n");
+    }
+
+    return totalLines;
 }

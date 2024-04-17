@@ -96,11 +96,12 @@ int main(){
 
     FILE* file = NULL;
 
-        file = fopen("test.txt","r");
+        file = stdin;
         if(file == NULL){
             fprintf(stderr,"failed to open file!");
             exit(1);
         }
+        
     char testString[5]="2O";
     formating format = formatHandling(testString);
     printLines(file,1,5,format);

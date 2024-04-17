@@ -52,6 +52,10 @@ int main(int argc, char* argv[]){
         }
     }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 48e4292876856ff5d65b9808cf56519e24d2ebd3
     //process other arguments
     for(int i = 0;i<argc;i++){
         
@@ -155,21 +159,32 @@ void printLines(FILE* file, int startLine, int endLine, formating options) {
 
     printf("%d",endLine);
 
+<<<<<<< HEAD
     while(fgets(line,MAX_LINE_LENGTH,file) != NULL){
+=======
+     while(fgets(line,MAX_LINE_LENGTH,file) != NULL){
+>>>>>>> 48e4292876856ff5d65b9808cf56519e24d2ebd3
             totalLines++;
         }
 
     if(endLine==0){
         
+<<<<<<< HEAD
         endLine = totalLines;
     }
 
     fseek(file, 0, SEEK_SET);
 
     printf("%d",endLine);
+=======
+        endLine=totalLines;
+    }
+    
+>>>>>>> 48e4292876856ff5d65b9808cf56519e24d2ebd3
 
     while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
-        
+
+
         line[strcspn(line, "\n")] = '\0'; //switches next line witch end string symbol
 
         if (lineCount >= startLine && lineCount <= endLine) {

@@ -3,128 +3,168 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <sys/stat.h>
+#include <time.h>
 
 #define MAX_LINE_LENGTH 1000
 
-typedef struct {
+//allows better handling of the formating options
+typedef struct formating{
+
     int width;
     bool align_right;
-    bool fill_zeros;
-    bool line_start_zero;
-} formatting;
+    bool align_left;
+    bool fillZeros;
+    bool line_startZero;
 
-void print_help();
-void print_version();
-formatting handle_format(const char *format);
+}formating;
 
-int main(int argc, char *argv[]) {
-    int start_line = 0;
-    int end_line = 0;
-    formatting format = {3, true, false, false}; // Default format
-    FILE *file = NULL;
+void printHelp();
+void printVersion();
+formating formatHandling(const char*);
+void printLines(int,char*[],int,int,formating,bool);
+int totalLines(FILE*);
 
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s [OPTION]... [FILENAME]\n", argv[0]);
-        exit(EXIT_FAILURE);
+int main(int argc, char* argv[]){
+
+    int startLine = 0;
+    int endLine = 0;
+    bool verbose_mode = false;
+    bool quiet_mode = false;
+    formating format={3,true,false,false,false}; //default format
+
+
+    
+
+    if(strcmp(argv[argc-1],"--help")==0){
+        printHelp();
+        exit(1);
     }
 
-    // Handle command line arguments
-    for (int i = 1; i < argc - 1; i++) {
-        if (strcmp(argv[i], "--help") == 0) {
-            print_help();
-            exit(EXIT_SUCCESS);
-        } else if (strcmp(argv[i], "--version") == 0) {
-            print_version();
-            exit(EXIT_SUCCESS);
-        } else if (strcmp(argv[i], "-s") == 0 && i + 1 < argc) {
-            start_line = atoi(argv[++i]);
-        } else if (strcmp(argv[i], "-e") == 0 && i + 1 < argc) {
-            end_line = atoi(argv[++i]);
-        } else if (strcmp(argv[i], "-n") == 0 && i + 1 < argc) {
-            format = handle_format(argv[++i]);
-        } else if (strcmp(argv[i], "-v") == 0) {
-            // Additional status and file information during processing (not implemented yet)
-        } else if (strcmp(argv[i], "-q") == 0) {
-            // Only print additional status and file information without printing file contents (not implemented yet)
+    else if(strcmp(argv[argc-1],"--version")==0){
+        printVersion();
+        exit(1);
+    }
+
+    //when the last argument is "-", the input is set to stdin
+
+
+    
+    //process other arguments
+    for(int i = 0;i<argc;i++){
+        
+       
+        if(strcmp(argv[i],"-s")==0 && i+1 < argc){
+            startLine = atoi(argv[++i]);
+        }
+        else if(strcmp(argv[i],"-e")==0 && i+1 < argc){
+            endLine = atoi(argv[++i]);
+        }
+        else if(strcmp(argv[i],"-v")==0){
+            verbose_mode = true;
+        }
+        else if(strcmp(argv[i],"-q")==0){
+            quiet_mode = true;
+        }
+        else if(strcmp(argv[i],"-n")==0 && i+1 < argc){
+           format=formatHandling(argv[++i]);
         }
     }
 
-    // Open the file or use stdin if "-" is provided as filename
-    if (strcmp(argv[argc - 1], "-") == 0) {
-        file = stdin;
+    printLines(argc, argv, startLine, endLine, format, verbose_mode);
+
+
+    if (quiet_mode && verbose_mode) {
+        fprintf(stderr, "Cannot use both -q and -v options at the same time.\n");
+        exit(1);
+    }
+
+    if (!quiet_mode && verbose_mode) {
+        fprintf(stdout,"Verbose mode is enabled.\n");
+    }
+
+
+    if (!quiet_mode) {
+
+        if (verbose_mode || quiet_mode) {
+            struct stat filestat;
+            stat(argv[argc - 1], &filestat);
+            printf("File access time %s", ctime(&filestat.st_atime));
+            printf("File modify time %s", ctime(&filestat.st_mtime));
+            printf("File changed time %s", ctime(&filestat.st_ctime));
+        }
+
+        printLines(argc, argv, startLine, endLine, format, verbose_mode);
+
     } else {
-        file = fopen(argv[argc - 1], "r");
-        if (file == NULL) {
-            fprintf(stderr, "Failed to open file!\n");
-            exit(EXIT_FAILURE);
-        }
+        fprintf(stdout,"Quiet mode is enabled.\n");
+
+           if (verbose_mode || quiet_mode) {
+                struct stat filestat;
+                stat(argv[argc - 1], &filestat);
+                printf("File access time %s", ctime(&filestat.st_atime));
+                printf("File modify time %s", ctime(&filestat.st_mtime));
+                printf("File changed time %s", ctime(&filestat.st_ctime));
+            }
+
+        //fprintf(stdout,"Total lines: %d\n", totalLines(file));
     }
 
-    // Skip lines until start_line is reached
-    char line[MAX_LINE_LENGTH];
-    int line_count = 0;
-    while (fgets(line, MAX_LINE_LENGTH, file) != NULL && line_count < start_line) {
-        line_count++;
-    }
 
-    // Print lines from start_line to end_line
-    while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
-        line_count++;
-        if (line_count > end_line && end_line != 0) {
-            break;
-        }
-        printf("%s\n", line);
-    }
 
-    // Close file if not stdin
-    if (file != stdin) {
-        fclose(file);
-    }
+    //closing file if file is not stdin
+   
 
     return 0;
 }
 
-void print_help() {
-    printf("Help information:\n"
-           "--help             Print help information; program terminates\n"
-           "--version          Print version information of the program\n"
-           "-s n               Specify the first (n-th) line to be output\n"
-           "-e n               Specify the last (m-th) line to be output\n"
-           "-n [format]        Output with leading line numbers\n"
+void printHelp(){
+
+    fprintf(stdout,"Help information:\n"
+           "--help - Help information is output; program terminates\n"
+           "-s n - Specify the first (nth) line to be output\n"
+           "-e n - Specify the last (mth) line to be output\n"
+           "-n [format] output with leading line numbers\n"
            "Optional format parameters:\n"
-           "    uint           Width of line number field (numeric)\n"
-           "    R              Right aligned (default)\n"
-           "    0              Right-aligned with leading zeros\n"
-           "    L              Left aligned\n"
-           "    N              The line number starts with zero\n"
-           "-v                 Print any additional status and file information during processing\n"
-           "-q                 Print only any additional status and file information, but does not print the contents of the file\n");
+           "    uint - Width of line number field (numeric)\n"
+           "    R - right aligned (default)\n"
+           "    0 - right-aligned with leading zeros\n"
+           "    L - left aligned\n"
+           "    N - the line number starts with zero\n"
+           "-v - program prints any additional status and file information during processing\n"
+           "-q - program only prints any additional status and file information, but does not print the contents of the file\n"
+           "--version - version information of the program is output\n");
+
 }
 
-void print_version() {
-    printf("cvb version: 1.0\n");
+void printVersion(){
+
+    printf("cvb version: 1.0, 30.03.2024");
 }
 
-formatting handle_format(const char *format) {
-    formatting options = {3, true, false, false}; // Default options
+formating formatHandling(const char* format){
 
-    if (format != NULL) {
-        for (int i = 0; format[i] != '\0'; i++) {
-            switch (format[i]) {
+   formating options = {3,true,false,false,false}; //default options 
+    
+    if(format != NULL){
+
+        for(int i =0; format[i] != '\0';i++){
+            switch (format[i]){
                 case 'R':
                     options.align_right = true;
                     break;
                 case 'L':
                     options.align_right = false;
+                    options.align_left = true;
                     break;
                 case '0':
-                    options.fill_zeros = true;
+                    options.fillZeros = true;
                     break;
                 case 'N':
-                    options.line_start_zero = true;
+                    options.line_startZero =true;
                     break;
                 default:
-                    if (isdigit(format[i])) {
+                    if (isdigit(format[i])){
                         options.width = atoi(&format[i]);
                     }
                     break;
@@ -132,5 +172,99 @@ formatting handle_format(const char *format) {
         }
     }
 
+
     return options;
+}
+
+void printLines(int argc, char* argv[], int startLine, int endLine, formating options, bool verbose_mode) {
+
+  
+    char line[MAX_LINE_LENGTH];
+    int lineCount = options.line_startZero ? 0 : 1;
+    int printedLines = 0; 
+
+    FILE* file = NULL;
+
+    if(strcmp(argv[argc-1],"-")==0){
+        file = stdin;
+        printf("input is stdin");
+        }
+    else{
+        file = fopen(argv[argc-1],"r");
+            if(file == NULL){
+                fprintf(stderr,"failed to open file!");
+                exit(1);
+            }
+    }
+
+    
+    int total_Lines = 10;//totalLines(file);
+    
+
+    if(endLine==0){
+
+        endLine=total_Lines;
+    }
+
+    if(verbose_mode == true){
+        fprintf(stdout,"total lines: %d\n", total_Lines);
+    }
+
+   
+
+    while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
+
+
+        line[strcspn(line, "\n")] = '\0'; //switches next line witch end string symbol
+
+        if (lineCount >= startLine && lineCount <= endLine) {
+            char line_number_str[10]; 
+
+          
+            if (options.fillZeros) {
+                snprintf(line_number_str, sizeof(line_number_str), "%0*d", options.width, lineCount);
+            } else {
+                snprintf(line_number_str, sizeof(line_number_str), "%*d", options.width, lineCount);
+            }
+
+         
+            if (options.align_right) {
+                fprintf(stdout, "%*s: %s\n", options.width, line_number_str, line);
+            } else {
+                fprintf(stdout, "%s: %*s\n", line_number_str, options.width, line);
+            }
+
+            printedLines++; 
+        }
+
+       
+        if (lineCount == endLine || printedLines == endLine - startLine + 1) {
+            break;
+        }
+
+        lineCount++;
+    }
+
+    if(strcmp(argv[argc-1],"-")!=0){
+        fclose(file);
+    }
+}
+
+int totalLines(FILE* file){
+
+    fseek(file, 0, SEEK_SET);
+
+    char tempLines[MAX_LINE_LENGTH];
+    int totalLines = 0;
+
+    while(fgets(tempLines,MAX_LINE_LENGTH,file) != NULL){
+        totalLines++;
+    }
+    fseek(file, 0, SEEK_SET);
+
+    if(totalLines == 0){
+        fprintf(stderr, "no lines in given file\n");
+    }
+
+    return totalLines;
 }
